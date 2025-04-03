@@ -15,6 +15,9 @@ public class GameManager : MonoBehaviour
     // 現在のゲーム状態
     public GameState CurrentGameState { get; private set; }
     
+    // 現在のゲームモード
+    public GameMode CurrentGameMode { get; private set; }
+    
     // ゲーム状態変更イベント
     public event System.Action<GameState> OnGameStateChanged;
     
@@ -36,14 +39,54 @@ public class GameManager : MonoBehaviour
     
     private void Start()
     {
+        // 各マネージャーの参照を確認
+        if (dataManager == null)
+        {
+            dataManager = FindObjectOfType<DataManager>();
+            Debug.LogWarning("DataManager reference not set in inspector - found in scene");
+        }
+        
+        if (uiManager == null)
+        {
+            uiManager = FindObjectOfType<UIManager>();
+            Debug.LogWarning("UIManager reference not set in inspector - found in scene");
+        }
+        
+        if (audioManager == null)
+        {
+            audioManager = FindObjectOfType<AudioManager>();
+            Debug.LogWarning("AudioManager reference not set in inspector - found in scene");
+        }
+        
         // ゲームデータの初期ロード
-        dataManager.LoadAllData();
+        if (dataManager != null)
+        {
+            dataManager.LoadAllData();
+        }
+        else
+        {
+            Debug.LogError("DataManager not found! Game data will not be loaded.");
+        }
         
         // メインメニューUIの表示
-        uiManager.ShowMainMenu();
+        if (uiManager != null)
+        {
+            uiManager.ShowMainMenu();
+        }
+        else
+        {
+            Debug.LogError("UIManager not found! UI will not be displayed.");
+        }
         
         // メインメニュー音楽の再生
-        audioManager.PlayBGM("MainTheme");
+        if (audioManager != null)
+        {
+            audioManager.PlayBGM("MainTheme");
+        }
+        else
+        {
+            Debug.LogError("AudioManager not found! Audio will not be played.");
+        }
     }
     
     // ゲーム状態を変更するメソッド
@@ -58,20 +101,20 @@ public class GameManager : MonoBehaviour
             switch (newState)
             {
                 case GameState.MainMenu:
-                    uiManager.ShowMainMenu();
-                    audioManager.PlayBGM("MainTheme");
+                    if (uiManager != null) uiManager.ShowMainMenu();
+                    if (audioManager != null) audioManager.PlayBGM("MainTheme");
                     break;
                 case GameState.Playing:
-                    uiManager.ShowGameplayUI();
-                    audioManager.PlayBGM("GameplayTheme");
+                    if (uiManager != null) uiManager.ShowGameplayUI();
+                    if (audioManager != null) audioManager.PlayBGM("GameplayTheme");
                     break;
                 case GameState.Paused:
-                    uiManager.ShowPauseMenu();
-                    audioManager.PauseBGM();
+                    if (uiManager != null) uiManager.ShowPauseMenu();
+                    if (audioManager != null) audioManager.PauseBGM();
                     break;
                 case GameState.Result:
-                    uiManager.ShowResultUI();
-                    audioManager.PlayBGM("ResultTheme");
+                    if (uiManager != null) uiManager.ShowResultUI();
+                    if (audioManager != null) audioManager.PlayBGM("ResultTheme");
                     break;
             }
         }
@@ -80,6 +123,9 @@ public class GameManager : MonoBehaviour
     // ゲームを開始する
     public void StartGame(GameMode gameMode)
     {
+        // 現在のゲームモードを設定
+        CurrentGameMode = gameMode;
+        
         // ゲームモードに応じた初期化
         switch (gameMode)
         {
@@ -123,7 +169,10 @@ public class GameManager : MonoBehaviour
     public void ExitGame()
     {
         // プレイヤーデータを保存
-        dataManager.SavePlayerData();
+        if (dataManager != null)
+        {
+            dataManager.SavePlayerData();
+        }
         
         // アプリケーションを終了
         #if UNITY_EDITOR

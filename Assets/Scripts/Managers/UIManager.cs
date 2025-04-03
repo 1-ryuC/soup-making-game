@@ -14,7 +14,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject resultUI;
     
     [Header("UI Controllers")]
-    [SerializeField] private MainMenuUI mainMenuController;
+    [SerializeField] private MonoBehaviour mainMenuController;
     [SerializeField] private GameplayUI gameplayController;
     [SerializeField] private ResultUI resultController;
     
@@ -26,7 +26,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Button tutorialNextButton;
     
     // シーン別UI管理
-    public MainMenuUI MainMenuUIController => mainMenuController;
+    public MainMenuUIController MainMenuController => mainMenuController as MainMenuUIController;
     public GameplayUI GameplayUIController => gameplayController;
     public ResultUI ResultUIController => resultController;
     
@@ -43,17 +43,39 @@ public class UIManager : MonoBehaviour
     {
         // UIの初期化
         HideAllUI();
+        
+        // メインメニューUIがすでに存在するか確認
+        if (mainMenuUI == null)
+        {
+            // メインメニューUIのプレハブを検索または生成
+            GameObject menuUI = GameObject.FindWithTag("MainMenuUI");
+            
+            if (menuUI != null)
+            {
+                mainMenuUI = menuUI;
+                var controller = menuUI.GetComponent<MainMenuUIController>();
+                if (controller != null)
+                {
+                    mainMenuController = controller;
+                    mainMenuController.Initialize();
+                }
+            }
+            else
+            {
+                Debug.LogWarning("MainMenuUI not found in scene. Make sure it has the 'MainMenuUI' tag.");
+            }
+        }
     }
     
     // すべてのUIを非表示にするメソッド
     private void HideAllUI()
     {
-        mainMenuUI.SetActive(false);
-        gameplayUI.SetActive(false);
-        pauseMenuUI.SetActive(false);
-        resultUI.SetActive(false);
-        messagePanel.SetActive(false);
-        tutorialPanel.SetActive(false);
+        if (mainMenuUI != null) mainMenuUI.SetActive(false);
+        if (gameplayUI != null) gameplayUI.SetActive(false);
+        if (pauseMenuUI != null) pauseMenuUI.SetActive(false);
+        if (resultUI != null) resultUI.SetActive(false);
+        if (messagePanel != null) messagePanel.SetActive(false);
+        if (tutorialPanel != null) tutorialPanel.SetActive(false);
     }
     
     // UI表示/非表示メソッド
@@ -77,12 +99,19 @@ public class UIManager : MonoBehaviour
     public void ShowMainMenu()
     {
         HideAllUI();
-        mainMenuUI.SetActive(true);
+        if (mainMenuUI != null) mainMenuUI.SetActive(true);
         
         // メインメニューUIの初期化
         if (mainMenuController != null)
         {
-            mainMenuController.InitializeUI();
+            if (mainMenuController is MainMenuUIController menuCtrl)
+            {
+                menuCtrl.Initialize();
+            }
+            else if (mainMenuController is MainMenuUI oldMenuCtrl)
+            {
+                oldMenuCtrl.InitializeUI();
+            }
         }
     }
     
